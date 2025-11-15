@@ -270,30 +270,6 @@ function App() {
     </Box>
   );
 
-  // Show loading screen while initializing Keycloak
-  if (!keycloakInitialized || isRedirecting) {
-    return (
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '100vh',
-            background: 'radial-gradient(circle at center, #1e3a8a 0%, #0f172a 50%, #1a1a2e 100%)',
-          }}
-        >
-          <CircularProgress size={60} />
-          <Typography variant="h6" sx={{ mt: 3, color: 'white' }}>
-            {isRedirecting ? 'Redirecting to your app...' : 'Authenticating...'}
-          </Typography>
-        </Box>
-      </ThemeProvider>
-    );
-  }
-
   const renderContent = () => {
     switch (selectedSection) {
       case 'dashboard':
@@ -306,7 +282,7 @@ function App() {
               Your central hub for all Candid Studios applications and resources, powered by Keycloak SSO for secure access.
             </Typography>
             <Grid container spacing={3}>
-              {getAppsForRoles(userRoles).map((app) => (
+              {apps.map((app) => (
                 <Grid item xs={12} sm={6} md={3} key={app.name} className="app-card">
                   <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', background: app.color, color: 'white', boxShadow: '0 10px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)', marginRight: '10px' }}>
                     <CardContent sx={{ flexGrow: 1, p: 3 }}>
@@ -481,47 +457,13 @@ function App() {
             >
               <MenuIcon />
             </IconButton>
-            <Typography variant="h6" noWrap component="div" sx={{
+            <Typography variant="h6" noWrap component="div" sx={{ 
               fontFamily: '"Kumbh Sans", sans-serif',
               fontWeight: 600,
               letterSpacing: '0.5px',
-              flexGrow: 1,
             }}>
               Candid Cloud
             </Typography>
-
-            {authenticated && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
-                  <Typography variant="body2" sx={{ color: 'white' }}>
-                    {userName}
-                  </Typography>
-                  {userRoles.length > 0 && (
-                    <Chip
-                      label={userRoles.find(r => !['uma_authorization', 'offline_access', 'default-roles-candidstudios'].includes(r)) || userRoles[0]}
-                      size="small"
-                      sx={{
-                        bgcolor: 'rgba(255, 255, 255, 0.2)',
-                        color: 'white',
-                        textTransform: 'capitalize',
-                      }}
-                    />
-                  )}
-                </Box>
-                <IconButton
-                  color="inherit"
-                  onClick={handleLogout}
-                  sx={{
-                    '&:hover': {
-                      bgcolor: 'rgba(255, 255, 255, 0.1)',
-                    },
-                  }}
-                  title="Logout"
-                >
-                  <LogoutIcon />
-                </IconButton>
-              </Box>
-            )}
           </Toolbar>
         </AppBar>
         <Box
