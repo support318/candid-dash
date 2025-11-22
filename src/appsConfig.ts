@@ -59,7 +59,7 @@ export const appsConfig: AppConfig[] = [
     url: 'https://earn.candidstudios.net',
     description: 'AffiliateWP platform for referral link generation, commission tracking, payout management, and performance analytics.',
     color: 'linear-gradient(135deg, rgba(139, 92, 246, 0.6) 0%, rgba(124, 58, 237, 0.4) 100%)',
-    roles: ['admin', 'referrer', 'affiliate'],
+    roles: ['admin', 'affiliate'],
   },
   {
     name: 'Answer Engine',
