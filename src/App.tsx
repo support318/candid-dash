@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ThemeProvider,
   createTheme,
@@ -26,16 +26,8 @@ import {
 import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
-  Language as LanguageIcon,
-  Cloud as CloudIcon,
-  Business as BusinessIcon,
-  AttachMoney as AttachMoneyIcon,
-  Mic as MicIcon,
   PlayCircleOutline as PlayIcon,
   Announcement as AnnouncementIcon,
-  QuestionAnswer as QuestionAnswerIcon,
-  School as SchoolIcon,
-  PhotoCamera as PhotoCameraIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
 import keycloak from './keycloak';
@@ -103,17 +95,6 @@ const theme = createTheme({
     },
   },
 });
-
-const colors = [
-  'linear-gradient(135deg, rgba(59, 130, 246, 0.6) 0%, rgba(29, 78, 216, 0.4) 100%)', // blue
-  'linear-gradient(135deg, rgba(16, 185, 129, 0.6) 0%, rgba(5, 150, 105, 0.4) 100%)', // green
-  'linear-gradient(135deg, rgba(245, 158, 11, 0.6) 0%, rgba(217, 119, 6, 0.4) 100%)', // yellow
-  'linear-gradient(135deg, rgba(239, 68, 68, 0.6) 0%, rgba(220, 38, 38, 0.4) 100%)', // red
-  'linear-gradient(135deg, rgba(139, 92, 246, 0.6) 0%, rgba(124, 58, 237, 0.4) 100%)', // purple
-  'linear-gradient(135deg, rgba(6, 182, 212, 0.6) 0%, rgba(8, 145, 178, 0.4) 100%)', // cyan
-  'linear-gradient(135deg, rgba(249, 115, 22, 0.6) 0%, rgba(234, 88, 12, 0.4) 100%)', // orange
-  'linear-gradient(135deg, rgba(236, 72, 153, 0.6) 0%, rgba(219, 39, 119, 0.4) 100%)', // pink
-];
 
 function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
