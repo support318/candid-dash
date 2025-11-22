@@ -115,65 +115,6 @@ const colors = [
   'linear-gradient(135deg, rgba(236, 72, 153, 0.6) 0%, rgba(219, 39, 119, 0.4) 100%)', // pink
 ];
 
-const apps = [
-  {
-    name: 'Smart Channel',
-    icon: <PhotoCameraIcon />,
-    url: 'https://media.candidstudios.net',
-    description: 'Cloudflare Workers R2 File Explorer with OIDC authentication for secure file management across 4 R2 buckets.',
-    color: colors[0],
-  },
-  {
-    name: 'WebSite',
-    icon: <LanguageIcon />,
-    url: 'https://www.candidstudios.net',
-    description: 'Main WordPress CMS site with photography portfolio, client galleries, booking system, and blog.',
-    color: colors[1],
-  },
-  {
-    name: 'Cloud',
-    icon: <CloudIcon />,
-    url: 'https://vidiblast.net',
-    description: 'Nextcloud AIO for file sharing, collaboration hub, calendar/contacts sync, and office document editing.',
-    color: colors[2],
-  },
-  {
-    name: 'CRM',
-    icon: <BusinessIcon />,
-    url: 'https://app.candidstudios.net',
-    description: 'Customer relationship management for sales pipeline, marketing automation, and communication tracking.',
-    color: colors[3],
-  },
-  {
-    name: 'Earn',
-    icon: <AttachMoneyIcon />,
-    url: 'https://earn.candidstudios.net',
-    description: 'AffiliateWP platform for referral link generation, commission tracking, payout management, and performance analytics.',
-    color: colors[4],
-  },
-  {
-    name: 'Answer Engine',
-    icon: <QuestionAnswerIcon />,
-    url: 'https://payload.up.railway.app/',
-    description: 'Payload CMS AI-powered answer engine with high-dimension vector search, semantic knowledge graph, and AI visual RAG for intelligent queries.',
-    color: colors[5],
-  },
-  {
-    name: 'Learning (LMS)',
-    icon: <SchoolIcon />,
-    url: 'https://ModalityVector.com',
-    description: 'Learning Management System for online courses, training modules, and educational content delivery.',
-    color: colors[6],
-  },
-  {
-    name: 'Agent',
-    icon: <MicIcon />,
-    url: 'https://voice.candidstudios.net',
-    description: 'VAPI/LiveKit implementation for AI-powered voice interactions, automated call handling, and voice-based workflows.',
-    color: colors[7],
-  },
-];
-
 function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState('dashboard');
@@ -321,9 +262,9 @@ function App() {
                           justifyContent: 'center',
                           boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.2)',
                         }}>
-                          {React.cloneElement(app.icon, { 
-                            sx: { fontSize: 16, color: 'white', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }
-                          })}
+                          <Box component="span" sx={{ fontSize: 16, color: 'white', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))', display: 'flex' }}>
+                            {app.icon}
+                          </Box>
                         </Box>
                         <Typography variant="h6" component="div" sx={{ 
                           fontWeight: 600,
