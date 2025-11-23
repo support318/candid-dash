@@ -376,10 +376,7 @@ function App() {
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
             <Box sx={{ mb: 4 }}>
               <Typography variant="h5" gutterBottom sx={{ color: '#fff' }}>
-                Welcome to Candid Studios Portal
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}>
-                Your central hub for all Candid Studios applications and resources.
+                Welcome back {profileData.firstName || userName.split(' ')[0] || 'there'} 👋
               </Typography>
             </Box>
 
@@ -550,7 +547,12 @@ function App() {
                     value={profileData.email}
                     onChange={handleProfileChange('email')}
                     disabled
-                    helperText="Managed by Keycloak SSO"
+                    sx={{
+                      '& .MuiOutlinedInput-input.Mui-disabled': {
+                        color: '#ffffff',
+                        WebkitTextFillColor: '#ffffff',
+                      },
+                    }}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -793,7 +795,7 @@ function App() {
                 flexGrow: 1,
               }}
             >
-              Candid Studios Portal
+              Candid Studios Dashboard
             </Typography>
 
             {authenticated && (
