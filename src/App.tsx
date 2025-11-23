@@ -409,7 +409,7 @@ function App() {
               letterSpacing: '0.5px',
               flexGrow: 1,
             }}>
-              Candid Cloud
+              Candid Studios Portal
             </Typography>
 
             {authenticated && (
