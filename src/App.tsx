@@ -22,6 +22,11 @@ import {
   IconButton,
   CircularProgress,
   Chip,
+  TextField,
+  Switch,
+  FormControlLabel,
+  Divider,
+  Avatar,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -29,21 +34,29 @@ import {
   PlayCircleOutline as PlayIcon,
   Announcement as AnnouncementIcon,
   Logout as LogoutIcon,
+  Settings as SettingsIcon,
+  ArrowBack as ArrowBackIcon,
+  Save as SaveIcon,
+  NotificationsActive as NotificationsIcon,
 } from '@mui/icons-material';
 import keycloak from './keycloak';
 import { getAppsForRoles } from './appsConfig';
+import type { AppConfig } from './appsConfig';
 
+// Theme matching Keycloak login style - #4a90e2 blue with glassmorphism
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#3b82f6', // blue
+      main: '#4a90e2', // Keycloak-matching blue
+      light: '#7ab3f0',
+      dark: '#2d64b4',
     },
     secondary: {
-      main: '#10b981', // green
+      main: '#10b981', // green accent
     },
     background: {
-      default: '#0a0f1e', // dark gray
-      paper: 'rgba(255, 255, 255, 0.03)', // subtle glass
+      default: '#0a0f1e', // dark navy
+      paper: 'rgba(255, 255, 255, 0.05)', // subtle glass
     },
     text: {
       primary: '#ffffff',
@@ -53,19 +66,20 @@ const theme = createTheme({
   typography: {
     fontFamily: '"Source Sans Pro", "Roboto", sans-serif',
     h5: {
-      fontSize: '1.375rem', // 22px (reduced from default ~24px)
+      fontSize: '1.375rem',
+      fontWeight: 600,
     },
     h6: {
       fontFamily: '"Roboto", sans-serif',
       fontWeight: 600,
-      fontSize: '1.125rem', // 18px (reduced from default ~20px)
+      fontSize: '1.125rem',
     },
     body2: {
       fontFamily: '"Source Sans Pro", sans-serif',
       fontSize: '10pt',
     },
     body1: {
-      fontSize: '0.875rem', // 14px (reduced from default 16px)
+      fontSize: '0.875rem',
     },
   },
   components: {
@@ -75,11 +89,11 @@ const theme = createTheme({
           background: 'rgba(255, 255, 255, 0.08)',
           backdropFilter: 'blur(20px) saturate(180%)',
           border: '1px solid rgba(255, 255, 255, 0.18)',
-          borderRadius: '20px',
+          borderRadius: '16px',
           transition: 'all 0.3s ease-in-out',
           '&:hover': {
-            transform: 'translateY(-12px) scale(1.03)',
-            boxShadow: '0 20px 60px 0 rgba(0, 0, 0, 0.5), 0 0 40px 0 rgba(59, 130, 246, 0.3)',
+            transform: 'translateY(-8px) scale(1.02)',
+            boxShadow: '0 20px 60px 0 rgba(0, 0, 0, 0.5), 0 0 40px 0 rgba(74, 144, 226, 0.3)',
             background: 'rgba(255, 255, 255, 0.12)',
           },
         },
@@ -88,8 +102,45 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          background: 'linear-gradient(90deg, #1e3a8a 0%, #5ca3ff 50%, #1e3a8a 100%)',
+          background: 'linear-gradient(90deg, #1e3a5f 0%, #4a90e2 50%, #1e3a5f 100%)',
           backdropFilter: 'blur(20px) saturate(180%)',
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '12px',
+            '& fieldset': {
+              borderColor: 'rgba(255, 255, 255, 0.2)',
+            },
+            '&:hover fieldset': {
+              borderColor: 'rgba(74, 144, 226, 0.5)',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: '#4a90e2',
+            },
+          },
+          '& .MuiInputLabel-root': {
+            color: 'rgba(255, 255, 255, 0.7)',
+          },
+          '& .MuiOutlinedInput-input': {
+            color: '#ffffff',
+          },
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        contained: {
+          background: 'linear-gradient(135deg, #4a90e2 0%, #2d64b4 100%)',
+          boxShadow: '0 4px 15px rgba(74, 144, 226, 0.3)',
+          '&:hover': {
+            background: 'linear-gradient(135deg, #5a9ef0 0%, #3d74c4 100%)',
+            boxShadow: '0 6px 20px rgba(74, 144, 226, 0.4)',
+          },
         },
       },
     },
@@ -105,11 +156,26 @@ function App() {
   const [userName, setUserName] = useState('');
   const [isRedirecting, setIsRedirecting] = useState(false);
 
+  // Profile settings state
+  const [profileData, setProfileData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    country: 'United States',
+    emailNotifications: true,
+    smsNotifications: false,
+  });
+
   // Initialize Keycloak
   useEffect(() => {
     keycloak
       .init({
-        onLoad: 'login-required', // Redirect to login if not authenticated
+        onLoad: 'login-required',
         checkLoginIframe: false,
       })
       .then((auth) => {
@@ -117,26 +183,33 @@ function App() {
         setKeycloakInitialized(true);
 
         if (auth) {
-          // Get user roles from Keycloak token
           const roles = keycloak.tokenParsed?.realm_access?.roles || [];
           setUserRoles(roles);
 
-          // Get user name
           const name = keycloak.tokenParsed?.name || keycloak.tokenParsed?.preferred_username || 'User';
+          const email = keycloak.tokenParsed?.email || '';
           setUserName(name);
+
+          // Pre-fill profile data from Keycloak
+          const nameParts = name.split(' ');
+          setProfileData(prev => ({
+            ...prev,
+            firstName: keycloak.tokenParsed?.given_name || nameParts[0] || '',
+            lastName: keycloak.tokenParsed?.family_name || nameParts.slice(1).join(' ') || '',
+            email: email,
+          }));
 
           console.log('Keycloak authenticated successfully');
           console.log('User roles:', roles);
-          console.log('User name:', name);
 
-          // Auto-redirect logic: if user has exactly 1 app, redirect to it
-          const userApps = getAppsForRoles(roles);
+          // Auto-redirect logic for single-app users
+          const userApps = getAppsForRoles(roles).filter(app => !app.isInternal);
           if (userApps.length === 1) {
             console.log('User has exactly 1 app, auto-redirecting to:', userApps[0].url);
             setIsRedirecting(true);
             setTimeout(() => {
               window.location.href = userApps[0].url;
-            }, 1500); // Small delay to show redirect message
+            }, 1500);
           }
         }
       })
@@ -150,8 +223,12 @@ function App() {
     setDrawerOpen(!drawerOpen);
   };
 
-  const handleAppClick = (url: string) => {
-    window.open(url, '_blank', 'noopener,noreferrer');
+  const handleAppClick = (app: AppConfig) => {
+    if (app.isInternal && app.url === '#settings') {
+      setSelectedSection('settings');
+    } else if (app.url) {
+      window.open(app.url, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const handleLogout = () => {
@@ -160,39 +237,115 @@ function App() {
     });
   };
 
+  const handleProfileChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    setProfileData(prev => ({
+      ...prev,
+      [field]: event.target.type === 'checkbox' ? event.target.checked : event.target.value,
+    }));
+  };
+
+  const handleSaveProfile = () => {
+    // TODO: Save profile to backend API
+    console.log('Saving profile:', profileData);
+    alert('Profile saved successfully!');
+  };
+
   const drawer = (
-      <Box sx={{ width: 250, background: '#1a1a1a', height: '100%' }}>
-        <Toolbar />
-        <List>
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => setSelectedSection('dashboard')}>
-            <ListItemIcon>
+    <Box sx={{
+      width: 250,
+      background: 'linear-gradient(180deg, rgba(30, 58, 95, 0.95) 0%, rgba(10, 15, 30, 0.98) 100%)',
+      backdropFilter: 'blur(20px)',
+      height: '100%',
+      borderRight: '1px solid rgba(74, 144, 226, 0.2)',
+    }}>
+      <Toolbar />
+      <List sx={{ px: 1 }}>
+        <ListItem disablePadding sx={{ mb: 0.5 }}>
+          <ListItemButton
+            onClick={() => setSelectedSection('dashboard')}
+            selected={selectedSection === 'dashboard'}
+            sx={{
+              borderRadius: '12px',
+              '&.Mui-selected': {
+                background: 'rgba(74, 144, 226, 0.2)',
+                '&:hover': { background: 'rgba(74, 144, 226, 0.3)' },
+              },
+              '&:hover': { background: 'rgba(255, 255, 255, 0.05)' },
+            }}
+          >
+            <ListItemIcon sx={{ color: selectedSection === 'dashboard' ? '#4a90e2' : 'rgba(255,255,255,0.7)' }}>
               <DashboardIcon />
             </ListItemIcon>
-            <ListItemText primary="Dashboard" />
+            <ListItemText primary="Dashboard" sx={{ '& .MuiTypography-root': { fontWeight: selectedSection === 'dashboard' ? 600 : 400 } }} />
           </ListItemButton>
         </ListItem>
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => setSelectedSection('videos')}>
-            <ListItemIcon>
+
+        <ListItem disablePadding sx={{ mb: 0.5 }}>
+          <ListItemButton
+            onClick={() => setSelectedSection('videos')}
+            selected={selectedSection === 'videos'}
+            sx={{
+              borderRadius: '12px',
+              '&.Mui-selected': {
+                background: 'rgba(74, 144, 226, 0.2)',
+                '&:hover': { background: 'rgba(74, 144, 226, 0.3)' },
+              },
+              '&:hover': { background: 'rgba(255, 255, 255, 0.05)' },
+            }}
+          >
+            <ListItemIcon sx={{ color: selectedSection === 'videos' ? '#4a90e2' : 'rgba(255,255,255,0.7)' }}>
               <PlayIcon />
             </ListItemIcon>
-            <ListItemText primary="Latest Videos" />
+            <ListItemText primary="Latest Videos" sx={{ '& .MuiTypography-root': { fontWeight: selectedSection === 'videos' ? 600 : 400 } }} />
           </ListItemButton>
         </ListItem>
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => setSelectedSection('announcements')}>
-            <ListItemIcon>
+
+        <ListItem disablePadding sx={{ mb: 0.5 }}>
+          <ListItemButton
+            onClick={() => setSelectedSection('announcements')}
+            selected={selectedSection === 'announcements'}
+            sx={{
+              borderRadius: '12px',
+              '&.Mui-selected': {
+                background: 'rgba(74, 144, 226, 0.2)',
+                '&:hover': { background: 'rgba(74, 144, 226, 0.3)' },
+              },
+              '&:hover': { background: 'rgba(255, 255, 255, 0.05)' },
+            }}
+          >
+            <ListItemIcon sx={{ color: selectedSection === 'announcements' ? '#4a90e2' : 'rgba(255,255,255,0.7)' }}>
               <AnnouncementIcon />
             </ListItemIcon>
-            <ListItemText primary="Announcements" />
+            <ListItemText primary="Announcements" sx={{ '& .MuiTypography-root': { fontWeight: selectedSection === 'announcements' ? 600 : 400 } }} />
+          </ListItemButton>
+        </ListItem>
+
+        <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.1)' }} />
+
+        <ListItem disablePadding>
+          <ListItemButton
+            onClick={() => setSelectedSection('settings')}
+            selected={selectedSection === 'settings'}
+            sx={{
+              borderRadius: '12px',
+              '&.Mui-selected': {
+                background: 'rgba(74, 144, 226, 0.2)',
+                '&:hover': { background: 'rgba(74, 144, 226, 0.3)' },
+              },
+              '&:hover': { background: 'rgba(255, 255, 255, 0.05)' },
+            }}
+          >
+            <ListItemIcon sx={{ color: selectedSection === 'settings' ? '#4a90e2' : 'rgba(255,255,255,0.7)' }}>
+              <SettingsIcon />
+            </ListItemIcon>
+            <ListItemText primary="Settings" sx={{ '& .MuiTypography-root': { fontWeight: selectedSection === 'settings' ? 600 : 400 } }} />
           </ListItemButton>
         </ListItem>
       </List>
     </Box>
   );
 
-  // Show loading screen while initializing Keycloak
+  // Loading screen
   if (!keycloakInitialized || isRedirecting) {
     return (
       <ThemeProvider theme={theme}>
@@ -204,10 +357,10 @@ function App() {
             alignItems: 'center',
             justifyContent: 'center',
             minHeight: '100vh',
-            background: 'radial-gradient(circle at center, #1e3a8a 0%, #0f172a 50%, #1a1a2e 100%)',
+            background: 'radial-gradient(circle at center, #1e3a5f 0%, #0f172a 50%, #0a0f1e 100%)',
           }}
         >
-          <CircularProgress size={60} />
+          <CircularProgress size={60} sx={{ color: '#4a90e2' }} />
           <Typography variant="h6" sx={{ mt: 3, color: 'white' }}>
             {isRedirecting ? 'Redirecting to your app...' : 'Authenticating...'}
           </Typography>
@@ -221,92 +374,310 @@ function App() {
       case 'dashboard':
         return (
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <Typography variant="h5" gutterBottom>
-              Welcome to Candid Studios Main Menu
-            </Typography>
-            <Typography variant="body2" paragraph>
-              Your central hub for all Candid Studios applications and resources, powered by Keycloak SSO for secure access.
-            </Typography>
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h5" gutterBottom sx={{ color: '#fff' }}>
+                Welcome to Candid Studios Portal
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                Your central hub for all Candid Studios applications and resources.
+              </Typography>
+            </Box>
+
             <Grid container spacing={3}>
               {getAppsForRoles(userRoles).map((app) => (
-                <Grid item xs={12} sm={6} md={3} key={app.name} className="app-card">
-                  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', background: app.color, color: 'white', boxShadow: '0 10px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)', marginRight: '10px' }}>
+                <Grid item xs={12} sm={6} md={4} lg={3} key={app.name}>
+                  <Card
+                    sx={{
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      background: app.color,
+                      cursor: app.url ? 'pointer' : 'default',
+                      opacity: app.url ? 1 : 0.6,
+                    }}
+                    onClick={() => app.url && handleAppClick(app)}
+                  >
                     <CardContent sx={{ flexGrow: 1, p: 3 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <Box sx={{ 
-                          mr: 2, 
-                          p: 1.5, 
+                        <Box sx={{
+                          mr: 2,
+                          p: 1.5,
                           borderRadius: '12px',
-                          background: 'rgba(255, 255, 255, 0.1)',
+                          background: 'rgba(255, 255, 255, 0.15)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.2)',
                         }}>
-                          <Box component="span" sx={{ fontSize: 16, color: 'white', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))', display: 'flex' }}>
+                          <Box component="span" sx={{ fontSize: 24, color: 'white', display: 'flex' }}>
                             {app.icon}
                           </Box>
                         </Box>
-                        <Typography variant="h6" component="div" sx={{ 
+                        <Typography variant="h6" sx={{
                           fontWeight: 600,
                           textShadow: '0 2px 8px rgba(0,0,0,0.3)',
                           lineHeight: 1.2,
+                          color: 'white',
                         }}>
                           {app.name}
                         </Typography>
                       </Box>
-                      <Typography variant="body2" sx={{ 
+                      <Typography variant="body2" sx={{
                         opacity: 0.9,
                         fontSize: '10pt',
                         textShadow: '0 1px 3px rgba(0,0,0,0.3)',
                         lineHeight: 1.5,
+                        color: 'white',
                       }}>
                         {app.description}
                       </Typography>
+                      {!app.url && (
+                        <Chip
+                          label="Coming Soon"
+                          size="small"
+                          sx={{
+                            mt: 2,
+                            bgcolor: 'rgba(255,255,255,0.2)',
+                            color: 'white',
+                            fontSize: '0.7rem',
+                          }}
+                        />
+                      )}
                     </CardContent>
-                    <CardActions sx={{ p: 2, pt: 0 }}>
-                      <Button 
-                        size="small" 
-                        variant="contained"
-                        fullWidth
-                        onClick={() => handleAppClick(app.url)}
-                        sx={{ 
-                          background: 'rgba(255, 255, 255, 0.2)',
-                          backdropFilter: 'blur(10px)',
-                          border: '1px solid rgba(255, 255, 255, 0.3)',
-                          color: 'white',
-                          fontWeight: 600,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-                          '&:hover': {
-                            background: 'rgba(255, 255, 255, 0.3)',
-                            transform: 'translateY(-2px)',
-                            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.3)',
-                          },
-                        }}
-                      >
-                        Launch
-                      </Button>
-                    </CardActions>
+                    {app.url && (
+                      <CardActions sx={{ p: 2, pt: 0 }}>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          fullWidth
+                          sx={{
+                            background: 'rgba(255, 255, 255, 0.2)',
+                            backdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            color: 'white',
+                            fontWeight: 600,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                            '&:hover': {
+                              background: 'rgba(255, 255, 255, 0.3)',
+                              transform: 'translateY(-2px)',
+                            },
+                          }}
+                        >
+                          {app.isInternal ? 'Open' : 'Launch'}
+                        </Button>
+                      </CardActions>
+                    )}
                   </Card>
                 </Grid>
               ))}
             </Grid>
           </Container>
         );
+
+      case 'settings':
+        return (
+          <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+              <IconButton
+                onClick={() => setSelectedSection('dashboard')}
+                sx={{ mr: 2, color: 'rgba(255,255,255,0.7)', '&:hover': { color: '#4a90e2' } }}
+              >
+                <ArrowBackIcon />
+              </IconButton>
+              <Typography variant="h5" sx={{ color: '#fff' }}>
+                Profile Settings
+              </Typography>
+            </Box>
+
+            {/* Profile Card */}
+            <Card sx={{ mb: 4, p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                <Avatar
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    mr: 3,
+                    bgcolor: '#4a90e2',
+                    fontSize: '2rem',
+                  }}
+                >
+                  {profileData.firstName?.[0] || userName?.[0] || 'U'}
+                </Avatar>
+                <Box>
+                  <Typography variant="h6" sx={{ color: '#fff' }}>
+                    {profileData.firstName} {profileData.lastName}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+                    {profileData.email}
+                  </Typography>
+                  <Chip
+                    label={userRoles.find(r => !['uma_authorization', 'offline_access', 'default-roles-candidstudios'].includes(r)) || 'User'}
+                    size="small"
+                    sx={{ mt: 1, bgcolor: 'rgba(74, 144, 226, 0.2)', color: '#4a90e2' }}
+                  />
+                </Box>
+              </Box>
+            </Card>
+
+            {/* Personal Information */}
+            <Card sx={{ mb: 4, p: 3 }}>
+              <Typography variant="h6" sx={{ color: '#fff', mb: 3 }}>
+                Personal Information
+              </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="First Name"
+                    value={profileData.firstName}
+                    onChange={handleProfileChange('firstName')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Last Name"
+                    value={profileData.lastName}
+                    onChange={handleProfileChange('lastName')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Email"
+                    type="email"
+                    value={profileData.email}
+                    onChange={handleProfileChange('email')}
+                    disabled
+                    helperText="Managed by Keycloak SSO"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Phone"
+                    value={profileData.phone}
+                    onChange={handleProfileChange('phone')}
+                  />
+                </Grid>
+              </Grid>
+            </Card>
+
+            {/* Address */}
+            <Card sx={{ mb: 4, p: 3 }}>
+              <Typography variant="h6" sx={{ color: '#fff', mb: 3 }}>
+                Address
+              </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Street Address"
+                    value={profileData.address}
+                    onChange={handleProfileChange('address')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="City"
+                    value={profileData.city}
+                    onChange={handleProfileChange('city')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={3}>
+                  <TextField
+                    fullWidth
+                    label="State"
+                    value={profileData.state}
+                    onChange={handleProfileChange('state')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={3}>
+                  <TextField
+                    fullWidth
+                    label="ZIP Code"
+                    value={profileData.zipCode}
+                    onChange={handleProfileChange('zipCode')}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Country"
+                    value={profileData.country}
+                    onChange={handleProfileChange('country')}
+                  />
+                </Grid>
+              </Grid>
+            </Card>
+
+            {/* Notifications */}
+            <Card sx={{ mb: 4, p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <NotificationsIcon sx={{ mr: 1, color: '#4a90e2' }} />
+                <Typography variant="h6" sx={{ color: '#fff' }}>
+                  Notification Preferences
+                </Typography>
+              </Box>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={profileData.emailNotifications}
+                    onChange={handleProfileChange('emailNotifications')}
+                    sx={{
+                      '& .MuiSwitch-switchBase.Mui-checked': { color: '#4a90e2' },
+                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#4a90e2' },
+                    }}
+                  />
+                }
+                label="Email Notifications"
+                sx={{ color: 'rgba(255,255,255,0.8)', display: 'block', mb: 1 }}
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={profileData.smsNotifications}
+                    onChange={handleProfileChange('smsNotifications')}
+                    sx={{
+                      '& .MuiSwitch-switchBase.Mui-checked': { color: '#4a90e2' },
+                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#4a90e2' },
+                    }}
+                  />
+                }
+                label="SMS Notifications"
+                sx={{ color: 'rgba(255,255,255,0.8)', display: 'block' }}
+              />
+            </Card>
+
+            {/* Save Button */}
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<SaveIcon />}
+                onClick={handleSaveProfile}
+                sx={{ px: 4 }}
+              >
+                Save Changes
+              </Button>
+            </Box>
+          </Container>
+        );
+
       case 'videos':
         return (
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <Typography variant="h4" gutterBottom>
+            <Typography variant="h5" gutterBottom sx={{ color: '#fff' }}>
               Latest Videos
             </Typography>
-            <Typography variant="body1" paragraph>
+            <Typography variant="body2" paragraph sx={{ color: 'rgba(255,255,255,0.7)' }}>
               Stay updated with our latest content and tutorials.
             </Typography>
             <Grid container spacing={3}>
               <Grid item xs={12} sm={6}>
-                <Card sx={{ background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)', color: 'white' }}>
+                <Card sx={{ background: 'linear-gradient(135deg, rgba(74, 144, 226, 0.6) 0%, rgba(45, 100, 180, 0.4) 100%)', color: 'white' }}>
                   <CardContent>
                     <Typography variant="h6">Dashboard Tutorial</Typography>
                     <Typography variant="body2">
@@ -319,7 +690,7 @@ function App() {
                 </Card>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Card sx={{ background: 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)', color: 'white' }}>
+                <Card sx={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.6) 0%, rgba(124, 58, 237, 0.4) 100%)', color: 'white' }}>
                   <CardContent>
                     <Typography variant="h6">App Integration Guide</Typography>
                     <Typography variant="body2">
@@ -334,19 +705,20 @@ function App() {
             </Grid>
           </Container>
         );
+
       case 'announcements':
         return (
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <Typography variant="h4" gutterBottom>
+            <Typography variant="h5" gutterBottom sx={{ color: '#fff' }}>
               Announcements
             </Typography>
             <Grid container spacing={3}>
               <Grid item xs={12} sm={6}>
-                <Card sx={{ background: 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)', color: 'white' }}>
+                <Card sx={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.6) 0%, rgba(5, 150, 105, 0.4) 100%)', color: 'white' }}>
                   <CardContent>
                     <Typography variant="h6">New Feature Release!</Typography>
                     <Typography variant="body2" paragraph>
-                      We've added new features to the R2 SmartChannel. Check it out!
+                      We've added new features to the Media Archive. Check it out!
                     </Typography>
                     <Typography variant="body2">
                       - Product Team
@@ -355,11 +727,11 @@ function App() {
                 </Card>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Card sx={{ background: 'linear-gradient(135deg, #ff5722 0%, #e64a19 100%)', color: 'white' }}>
+                <Card sx={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.6) 0%, rgba(220, 38, 38, 0.4) 100%)', color: 'white' }}>
                   <CardContent>
                     <Typography variant="h6">Maintenance Schedule</Typography>
                     <Typography variant="body2" paragraph>
-                      Scheduled maintenance for Nextcloud on Sunday 2-4 PM EST.
+                      Scheduled maintenance for Cloud Storage on Sunday 2-4 PM EST.
                     </Typography>
                     <Typography variant="body2">
                       - IT Team
@@ -383,6 +755,7 @@ function App() {
             </Grid>
           </Container>
         );
+
       default:
         return null;
     }
@@ -392,7 +765,13 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ display: 'flex' }}>
-        <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #7c3aed 100%)' }}>
+        <AppBar
+          position="fixed"
+          sx={{
+            zIndex: (theme) => theme.zIndex.drawer + 1,
+            background: 'linear-gradient(135deg, #1e3a5f 0%, #4a90e2 50%, #1e3a5f 100%)',
+          }}
+        >
           <Toolbar>
             <IconButton
               color="inherit"
@@ -403,12 +782,17 @@ function App() {
             >
               <MenuIcon />
             </IconButton>
-            <Typography variant="h6" noWrap component="div" sx={{
-              fontFamily: '"Kumbh Sans", sans-serif',
-              fontWeight: 600,
-              letterSpacing: '0.5px',
-              flexGrow: 1,
-            }}>
+            <Typography
+              variant="h6"
+              noWrap
+              component="div"
+              sx={{
+                fontFamily: '"Kumbh Sans", sans-serif',
+                fontWeight: 600,
+                letterSpacing: '0.5px',
+                flexGrow: 1,
+              }}
+            >
               Candid Studios Portal
             </Typography>
 
@@ -446,6 +830,7 @@ function App() {
             )}
           </Toolbar>
         </AppBar>
+
         <Box
           component="nav"
           sx={{ width: { sm: 250 }, flexShrink: { sm: 0 } }}
@@ -454,9 +839,7 @@ function App() {
             variant="temporary"
             open={drawerOpen}
             onClose={handleDrawerToggle}
-            ModalProps={{
-              keepMounted: true,
-            }}
+            ModalProps={{ keepMounted: true }}
             sx={{
               display: { xs: 'block', sm: 'none' },
               '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 250 },
@@ -468,16 +851,23 @@ function App() {
             variant="permanent"
             sx={{
               display: { xs: 'none', sm: 'block' },
-              '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 250 },
+              '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 250, border: 'none' },
             }}
             open
           >
             {drawer}
           </Drawer>
         </Box>
+
         <Box
           component="main"
-          sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - 250px)` }, background: 'radial-gradient(circle at center, #1e3a8a 0%, #0f172a 50%, #1a1a2e 100%)', minHeight: '100vh' }}
+          sx={{
+            flexGrow: 1,
+            p: 3,
+            width: { sm: `calc(100% - 250px)` },
+            background: 'radial-gradient(circle at center, #1e3a5f 0%, #0f172a 50%, #0a0f1e 100%)',
+            minHeight: '100vh',
+          }}
         >
           <Toolbar />
           {renderContent()}
