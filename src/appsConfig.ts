@@ -9,6 +9,7 @@ import {
   Person as ClientPortalIcon,
   CloudUpload as UploadIcon,
   MenuBook as KnowledgeBaseIcon,
+  AdminPanelSettings as AdminPanelIcon,
 } from '@mui/icons-material';
 import React from 'react';
 
@@ -102,6 +103,14 @@ export const appsConfig: AppConfig[] = [
     url: 'https://payload.up.railway.app/',
     description: 'Search documentation, guides, and get answers to common questions.',
     color: 'linear-gradient(135deg, rgba(168, 85, 247, 0.6) 0%, rgba(147, 51, 234, 0.4) 100%)',
+    roles: ['admin'],
+  },
+  {
+    name: 'Admin Panel',
+    icon: React.createElement(AdminPanelIcon),
+    url: 'https://login.candidstudios.net/admin',
+    description: 'Manage users, authentication settings, roles, and SSO configuration.',
+    color: 'linear-gradient(135deg, rgba(100, 116, 139, 0.6) 0%, rgba(71, 85, 105, 0.4) 100%)',
     roles: ['admin'],
   },
 ];
