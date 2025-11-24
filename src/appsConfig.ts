@@ -79,7 +79,7 @@ export const appsConfig: AppConfig[] = [
     url: 'https://ModalityVector.com',
     description: 'Online courses, training modules, and educational content.',
     color: 'linear-gradient(135deg, rgba(249, 115, 22, 0.6) 0%, rgba(234, 88, 12, 0.4) 100%)',
-    roles: ['admin', 'client', 'photographer', 'photographer-videographer'],
+    roles: ['admin', 'client', 'photographer', 'photographer-videographer', 'photo-editor', 'video-editor', 'photo-video-editor'],
   },
   {
     name: 'Client Portal',
