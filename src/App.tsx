@@ -27,6 +27,8 @@ import {
   FormControlLabel,
   Divider,
   Avatar,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -38,6 +40,9 @@ import {
   ArrowBack as ArrowBackIcon,
   Save as SaveIcon,
   NotificationsActive as NotificationsIcon,
+  AttachMoney as ReferralIcon,
+  ContentCopy as CopyIcon,
+  OpenInNew as OpenIcon,
 } from '@mui/icons-material';
 import keycloak from './keycloak';
 import { getAppsForRoles } from './appsConfig';
@@ -171,6 +176,16 @@ function App() {
     smsNotifications: false,
   });
 
+  // Referral program state
+  const [referralData, setReferralData] = useState<{
+    referral_code?: string;
+    notify_on_referral_conversion?: boolean;
+    notify_on_payout?: boolean;
+    notify_on_tier_upgrade?: boolean;
+  } | null>(null);
+  const [loadingReferralData, setLoadingReferralData] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+
   // Initialize Keycloak
   useEffect(() => {
     keycloak
@@ -219,6 +234,43 @@ function App() {
       });
   }, []);
 
+  // Fetch referral data if user has referrer/affiliate role
+  useEffect(() => {
+    const fetchReferralData = async () => {
+      if (!authenticated || !userRoles.some(role => ['referrer', 'affiliate'].includes(role))) {
+        return;
+      }
+
+      setLoadingReferralData(true);
+      try {
+        const token = keycloak.token;
+        const response = await fetch('https://earn.candidstudios.net/api/referrer/settings', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.referrer) {
+            setReferralData({
+              referral_code: data.referrer.referral_code,
+              notify_on_referral_conversion: data.referrer.notify_on_referral_conversion ?? true,
+              notify_on_payout: data.referrer.notify_on_payout ?? true,
+              notify_on_tier_upgrade: data.referrer.notify_on_tier_upgrade ?? true,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch referral data:', error);
+      } finally {
+        setLoadingReferralData(false);
+      }
+    };
+
+    fetchReferralData();
+  }, [authenticated, userRoles]);
+
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
   };
@@ -248,6 +300,43 @@ function App() {
     // TODO: Save profile to backend API
     console.log('Saving profile:', profileData);
     alert('Profile saved successfully!');
+  };
+
+  const copyReferralLink = () => {
+    if (referralData?.referral_code) {
+      const referralLink = `https://www.candidstudios.net/contact?ref=${referralData.referral_code}`;
+      navigator.clipboard.writeText(referralLink);
+      setSnackbar({ open: true, message: 'Referral link copied to clipboard!', severity: 'success' });
+    }
+  };
+
+  const handleReferralNotificationChange = async (field: string, value: boolean) => {
+    if (!referralData) return;
+
+    try {
+      const token = keycloak.token;
+      const response = await fetch('https://earn.candidstudios.net/api/referrer/settings', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...referralData,
+          [field]: value,
+        }),
+      });
+
+      if (response.ok) {
+        setReferralData({ ...referralData, [field]: value });
+        setSnackbar({ open: true, message: 'Notification preferences updated!', severity: 'success' });
+      } else {
+        setSnackbar({ open: true, message: 'Failed to update preferences', severity: 'error' });
+      }
+    } catch (error) {
+      console.error('Failed to update referral notifications:', error);
+      setSnackbar({ open: true, message: 'Failed to update preferences', severity: 'error' });
+    }
   };
 
   const drawer = (
@@ -653,6 +742,144 @@ function App() {
               />
             </Card>
 
+            {/* Referral Program Settings - Only show if user has referrer/affiliate role */}
+            {userRoles.some(role => ['referrer', 'affiliate'].includes(role)) && (
+              <Card sx={{ mb: 4, p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <ReferralIcon sx={{ mr: 1, color: '#4a90e2' }} />
+                  <Typography variant="h6" sx={{ color: '#fff' }}>
+                    Referral Program Settings
+                  </Typography>
+                </Box>
+
+                {loadingReferralData ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                    <CircularProgress size={40} />
+                  </Box>
+                ) : referralData ? (
+                  <>
+                    {/* Referral Code & Link */}
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant="subtitle2" sx={{ color: 'rgba(255,255,255,0.6)', mb: 1 }}>
+                        Your Referral Code
+                      </Typography>
+                      <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        p: 2,
+                        bgcolor: 'rgba(74, 144, 226, 0.1)',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(74, 144, 226, 0.2)',
+                      }}>
+                        <Typography variant="h6" sx={{ color: '#4a90e2', fontFamily: 'monospace', flex: 1 }}>
+                          {referralData.referral_code}
+                        </Typography>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          startIcon={<CopyIcon />}
+                          onClick={copyReferralLink}
+                          sx={{ whiteSpace: 'nowrap' }}
+                        >
+                          Copy Link
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<OpenIcon />}
+                          onClick={() => window.open('https://earn.candidstudios.net/referrer-dashboard', '_blank')}
+                          sx={{
+                            whiteSpace: 'nowrap',
+                            borderColor: 'rgba(74, 144, 226, 0.5)',
+                            color: '#4a90e2',
+                            '&:hover': {
+                              borderColor: '#4a90e2',
+                              bgcolor: 'rgba(74, 144, 226, 0.1)',
+                            },
+                          }}
+                        >
+                          Full Dashboard
+                        </Button>
+                      </Box>
+                    </Box>
+
+                    {/* Referral Link Preview */}
+                    <Box sx={{ mb: 3, p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
+                        Referral Link
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: 'rgba(255,255,255,0.7)',
+                          fontFamily: 'monospace',
+                          fontSize: '0.8rem',
+                          wordBreak: 'break-all',
+                        }}
+                      >
+                        https://www.candidstudios.net/contact?ref={referralData.referral_code}
+                      </Typography>
+                    </Box>
+
+                    {/* Notification Preferences */}
+                    <Typography variant="subtitle2" sx={{ color: 'rgba(255,255,255,0.8)', mb: 2, mt: 3 }}>
+                      Email Notification Preferences
+                    </Typography>
+
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={referralData.notify_on_referral_conversion ?? true}
+                          onChange={(e) => handleReferralNotificationChange('notify_on_referral_conversion', e.target.checked)}
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': { color: '#4a90e2' },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#4a90e2' },
+                          }}
+                        />
+                      }
+                      label="Referral Conversions - Get notified when someone you referred books a service"
+                      sx={{ color: 'rgba(255,255,255,0.8)', display: 'block', mb: 1 }}
+                    />
+
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={referralData.notify_on_payout ?? true}
+                          onChange={(e) => handleReferralNotificationChange('notify_on_payout', e.target.checked)}
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': { color: '#4a90e2' },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#4a90e2' },
+                          }}
+                        />
+                      }
+                      label="Payout Updates - Get notified when commission payouts are processed"
+                      sx={{ color: 'rgba(255,255,255,0.8)', display: 'block', mb: 1 }}
+                    />
+
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={referralData.notify_on_tier_upgrade ?? true}
+                          onChange={(e) => handleReferralNotificationChange('notify_on_tier_upgrade', e.target.checked)}
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': { color: '#4a90e2' },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#4a90e2' },
+                          }}
+                        />
+                      }
+                      label="Tier Upgrades - Get notified when you reach a new referral tier"
+                      sx={{ color: 'rgba(255,255,255,0.8)', display: 'block' }}
+                    />
+                  </>
+                ) : (
+                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', textAlign: 'center', py: 3 }}>
+                    Unable to load referral settings
+                  </Typography>
+                )}
+              </Card>
+            )}
+
             {/* Save Button */}
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Button
@@ -875,6 +1102,22 @@ function App() {
           {renderContent()}
         </Box>
       </Box>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </ThemeProvider>
   );
 }
