@@ -1,9 +1,9 @@
 import Keycloak from 'keycloak-js';
 
-// Keycloak configuration
+// Keycloak configuration - using master realm
 const keycloakConfig = {
   url: 'https://login.candidstudios.net',
-  realm: 'candidstudios',
+  realm: 'master',
   clientId: 'candid-dash',
 };
 
