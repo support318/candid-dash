@@ -28,7 +28,7 @@ export const appsConfig: AppConfig[] = [
   {
     name: 'Analytics',
     icon: React.createElement(AnalyticsIcon),
-    url: '', // To be configured
+    url: 'https://analytics.candidstudios.net',
     description: 'Track business metrics, revenue analytics, and performance dashboards for informed decision making.',
     color: 'linear-gradient(135deg, rgba(74, 144, 226, 0.6) 0%, rgba(45, 100, 180, 0.4) 100%)',
     roles: ['admin'],
