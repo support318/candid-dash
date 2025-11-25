@@ -20,7 +20,6 @@ import {
   Button,
   Container,
   IconButton,
-  CircularProgress,
   Chip,
   TextField,
   Switch,
@@ -30,6 +29,33 @@ import {
   Snackbar,
   Alert,
 } from '@mui/material';
+
+// Camera shutter loading spinner component
+const ShutterLoader = ({ size = 60 }: { size?: number }) => (
+  <Box
+    sx={{
+      width: size,
+      height: size,
+      animation: 'spin 1.5s linear infinite',
+      '@keyframes spin': {
+        '0%': { transform: 'rotate(0deg)' },
+        '100%': { transform: 'rotate(360deg)' },
+      },
+    }}
+  >
+    <svg viewBox="0 0 512 512" width={size} height={size}>
+      <circle cx="256" cy="256" r="240" fill="none" stroke="#4a90e2" strokeWidth="24"/>
+      <circle cx="256" cy="256" r="200" fill="none" stroke="#4a90e2" strokeWidth="8"/>
+      <path fill="#4a90e2" d="M256 56 L256 156 L156 256 Z" transform="rotate(0, 256, 256)"/>
+      <path fill="#4a90e2" d="M256 56 L256 156 L156 256 Z" transform="rotate(60, 256, 256)"/>
+      <path fill="#4a90e2" d="M256 56 L256 156 L156 256 Z" transform="rotate(120, 256, 256)"/>
+      <path fill="#4a90e2" d="M256 56 L256 156 L156 256 Z" transform="rotate(180, 256, 256)"/>
+      <path fill="#4a90e2" d="M256 56 L256 156 L156 256 Z" transform="rotate(240, 256, 256)"/>
+      <path fill="#4a90e2" d="M256 56 L256 156 L156 256 Z" transform="rotate(300, 256, 256)"/>
+      <circle cx="256" cy="256" r="70" fill="#0a0f1e"/>
+    </svg>
+  </Box>
+);
 import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
@@ -449,7 +475,7 @@ function App() {
             background: 'radial-gradient(circle at center, #1e3a5f 0%, #0f172a 50%, #0a0f1e 100%)',
           }}
         >
-          <CircularProgress size={60} sx={{ color: '#4a90e2' }} />
+          <ShutterLoader size={60} />
           <Typography variant="h6" sx={{ mt: 3, color: 'white' }}>
             {isRedirecting ? 'Redirecting to your app...' : 'Authenticating...'}
           </Typography>
@@ -754,7 +780,7 @@ function App() {
 
                 {loadingReferralData ? (
                   <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-                    <CircularProgress size={40} />
+                    <ShutterLoader size={40} />
                   </Box>
                 ) : referralData ? (
                   <>
