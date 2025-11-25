@@ -1,8 +1,9 @@
 import Keycloak from 'keycloak-js';
 
 // Keycloak configuration - using master realm
+// Keycloak server is at admin.candidstudios.net
 const keycloakConfig = {
-  url: 'https://login.candidstudios.net',
+  url: 'https://admin.candidstudios.net',
   realm: 'master',
   clientId: 'candid-dash',
 };
