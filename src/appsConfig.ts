@@ -108,7 +108,7 @@ export const appsConfig: AppConfig[] = [
   {
     name: 'Admin Panel',
     icon: React.createElement(AdminPanelIcon),
-    url: 'https://login.candidstudios.net/admin',
+    url: 'https://admin.candidstudios.net/admin',
     description: 'Manage users, authentication settings, roles, and SSO configuration.',
     color: 'linear-gradient(135deg, rgba(100, 116, 139, 0.6) 0%, rgba(71, 85, 105, 0.4) 100%)',
     roles: ['admin'],
