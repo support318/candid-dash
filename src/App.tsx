@@ -33,28 +33,20 @@ import {
 // Camera shutter loading spinner component
 const ShutterLoader = ({ size = 60 }: { size?: number }) => (
   <Box
+    component="img"
+    src="/shutter-loader.png"
+    alt="Loading..."
     sx={{
       width: size,
       height: size,
       animation: 'spin 1.5s linear infinite',
+      filter: 'invert(1)', // Makes the black PNG white
       '@keyframes spin': {
         '0%': { transform: 'rotate(0deg)' },
         '100%': { transform: 'rotate(360deg)' },
       },
     }}
-  >
-    <svg viewBox="0 0 512 512" width={size} height={size}>
-      <circle cx="256" cy="256" r="240" fill="none" stroke="#4a90e2" strokeWidth="24"/>
-      <circle cx="256" cy="256" r="200" fill="none" stroke="#4a90e2" strokeWidth="8"/>
-      <path fill="#4a90e2" d="M256 56 L256 156 L156 256 Z" transform="rotate(0, 256, 256)"/>
-      <path fill="#4a90e2" d="M256 56 L256 156 L156 256 Z" transform="rotate(60, 256, 256)"/>
-      <path fill="#4a90e2" d="M256 56 L256 156 L156 256 Z" transform="rotate(120, 256, 256)"/>
-      <path fill="#4a90e2" d="M256 56 L256 156 L156 256 Z" transform="rotate(180, 256, 256)"/>
-      <path fill="#4a90e2" d="M256 56 L256 156 L156 256 Z" transform="rotate(240, 256, 256)"/>
-      <path fill="#4a90e2" d="M256 56 L256 156 L156 256 Z" transform="rotate(300, 256, 256)"/>
-      <circle cx="256" cy="256" r="70" fill="#0a0f1e"/>
-    </svg>
-  </Box>
+  />
 );
 import {
   Menu as MenuIcon,
