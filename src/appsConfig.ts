@@ -39,7 +39,7 @@ export const appsConfig: AppConfig[] = [
     url: 'https://vidiblast.net',
     description: 'File sharing, collaboration, calendar and contacts sync, and office document editing.',
     color: 'linear-gradient(135deg, rgba(245, 158, 11, 0.6) 0%, rgba(217, 119, 6, 0.4) 100%)',
-    roles: ['admin', 'photographer', 'photographer-videographer', 'photo-editor', 'video-editor', 'photo-video-editor', 'client'],
+    roles: ['admin', 'photographer', 'photographer-videographer', 'photo-editor', 'video-editor', 'photo-video-editor', 'project-manager', 'client'],
   },
   {
     name: 'Media Archive',
@@ -47,7 +47,7 @@ export const appsConfig: AppConfig[] = [
     url: 'https://media.candidstudios.net',
     description: 'Browse and manage media files with secure authentication.',
     color: 'linear-gradient(135deg, rgba(139, 92, 246, 0.6) 0%, rgba(124, 58, 237, 0.4) 100%)',
-    roles: ['admin', 'photographer', 'photographer-videographer', 'photo-editor', 'video-editor', 'photo-video-editor'],
+    roles: ['admin', 'photographer', 'photographer-videographer', 'photo-editor', 'video-editor', 'photo-video-editor', 'project-manager'],
   },
   {
     name: 'Booking System',
@@ -55,7 +55,7 @@ export const appsConfig: AppConfig[] = [
     url: 'https://app.candidstudios.net',
     description: 'Sales pipeline, scheduling, marketing automation, and client communication.',
     color: 'linear-gradient(135deg, rgba(239, 68, 68, 0.6) 0%, rgba(220, 38, 38, 0.4) 100%)',
-    roles: ['admin', 'vendor'],
+    roles: ['admin', 'vendor', 'project-manager'],
   },
   {
     name: 'Website',
@@ -79,7 +79,7 @@ export const appsConfig: AppConfig[] = [
     url: 'https://ModalityVector.com',
     description: 'Online courses, training modules, and educational content.',
     color: 'linear-gradient(135deg, rgba(249, 115, 22, 0.6) 0%, rgba(234, 88, 12, 0.4) 100%)',
-    roles: ['admin', 'client', 'photographer', 'photographer-videographer', 'photo-editor', 'video-editor', 'photo-video-editor'],
+    roles: ['admin', 'client', 'photographer', 'photographer-videographer', 'photo-editor', 'video-editor', 'photo-video-editor', 'project-manager'],
   },
   {
     name: 'Client Portal',
@@ -95,7 +95,7 @@ export const appsConfig: AppConfig[] = [
     url: '', // To be configured
     description: 'Upload system for photographers and editors to submit completed project deliverables.',
     color: 'linear-gradient(135deg, rgba(34, 197, 94, 0.6) 0%, rgba(22, 163, 74, 0.4) 100%)',
-    roles: ['admin', 'photographer', 'photographer-videographer', 'photo-editor', 'video-editor', 'photo-video-editor'],
+    roles: ['admin', 'photographer', 'photographer-videographer', 'photo-editor', 'video-editor', 'photo-video-editor', 'project-manager'],
   },
   {
     name: 'Knowledge Base',
