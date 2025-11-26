@@ -297,7 +297,7 @@ function App() {
     if (app.isInternal && app.url === '#settings') {
       setSelectedSection('settings');
     } else if (app.url) {
-      window.open(app.url, '_blank', 'noopener,noreferrer');
+      window.location.href = app.url;
     }
   };
 
