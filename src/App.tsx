@@ -204,6 +204,15 @@ function App() {
   const [loadingReferralData, setLoadingReferralData] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
+  // Admin notification settings state
+  const [adminNotifications, setAdminNotifications] = useState({
+    accountSetupEnabled: true,
+    referralSignupEnabled: true,
+    notificationEmail: 'ryanmayiras@gmail.com',
+  });
+  const [loadingAdminSettings, setLoadingAdminSettings] = useState(false);
+  const [savingAdminSettings, setSavingAdminSettings] = useState(false);
+
   // Initialize Keycloak
   useEffect(() => {
     keycloak
@@ -288,6 +297,73 @@ function App() {
 
     fetchReferralData();
   }, [authenticated, userRoles]);
+
+  // Fetch admin notification settings if user is admin
+  useEffect(() => {
+    const fetchAdminSettings = async () => {
+      if (!authenticated || !userRoles.includes('admin')) {
+        return;
+      }
+
+      setLoadingAdminSettings(true);
+      try {
+        const response = await fetch('https://n8n.candidstudios.net/webhook/admin-settings-get', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'get' }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.settings) {
+            setAdminNotifications({
+              accountSetupEnabled: data.settings.accountSetupEnabled ?? true,
+              referralSignupEnabled: data.settings.referralSignupEnabled ?? true,
+              notificationEmail: data.settings.notificationEmail || 'ryanmayiras@gmail.com',
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch admin settings:', error);
+      } finally {
+        setLoadingAdminSettings(false);
+      }
+    };
+
+    fetchAdminSettings();
+  }, [authenticated, userRoles]);
+
+  const handleAdminNotificationChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    setAdminNotifications(prev => ({
+      ...prev,
+      [field]: event.target.type === 'checkbox' ? event.target.checked : event.target.value,
+    }));
+  };
+
+  const handleSaveAdminNotifications = async () => {
+    setSavingAdminSettings(true);
+    try {
+      const response = await fetch('https://n8n.candidstudios.net/webhook/admin-settings-save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'save',
+          settings: adminNotifications,
+        }),
+      });
+
+      if (response.ok) {
+        setSnackbar({ open: true, message: 'Admin notification settings saved!', severity: 'success' });
+      } else {
+        setSnackbar({ open: true, message: 'Failed to save settings', severity: 'error' });
+      }
+    } catch (error) {
+      console.error('Failed to save admin settings:', error);
+      setSnackbar({ open: true, message: 'Failed to save settings', severity: 'error' });
+    } finally {
+      setSavingAdminSettings(false);
+    }
+  };
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
@@ -894,6 +970,92 @@ function App() {
                   <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', textAlign: 'center', py: 3 }}>
                     Unable to load referral settings
                   </Typography>
+                )}
+              </Card>
+            )}
+
+            {/* Admin Notification Settings - Only show if user is admin */}
+            {userRoles.includes('admin') && (
+              <Card sx={{ mb: 4, p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <NotificationsIcon sx={{ mr: 1, color: '#f59e0b' }} />
+                  <Typography variant="h6" sx={{ color: '#fff' }}>
+                    Admin Notification Settings
+                  </Typography>
+                </Box>
+
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', mb: 3 }}>
+                  Configure email notifications for system events. These notifications are sent to the admin email address.
+                </Typography>
+
+                {loadingAdminSettings ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                    <ShutterLoader size={40} />
+                  </Box>
+                ) : (
+                  <>
+                    {/* Notification Email */}
+                    <Box sx={{ mb: 3 }}>
+                      <TextField
+                        fullWidth
+                        label="Notification Email Address"
+                        value={adminNotifications.notificationEmail}
+                        onChange={handleAdminNotificationChange('notificationEmail')}
+                        helperText="All admin notifications will be sent to this email"
+                        sx={{ mb: 2 }}
+                      />
+                    </Box>
+
+                    <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.1)' }} />
+
+                    <Typography variant="subtitle2" sx={{ color: 'rgba(255,255,255,0.8)', mb: 2 }}>
+                      Event Notifications
+                    </Typography>
+
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={adminNotifications.accountSetupEnabled}
+                          onChange={handleAdminNotificationChange('accountSetupEnabled')}
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': { color: '#f59e0b' },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#f59e0b' },
+                          }}
+                        />
+                      }
+                      label="Dashboard Account Setup - Get notified when someone completes their account setup"
+                      sx={{ color: 'rgba(255,255,255,0.8)', display: 'block', mb: 1 }}
+                    />
+
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={adminNotifications.referralSignupEnabled}
+                          onChange={handleAdminNotificationChange('referralSignupEnabled')}
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': { color: '#f59e0b' },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#f59e0b' },
+                          }}
+                        />
+                      }
+                      label="Referral Program Signup - Get notified when someone joins the referral program"
+                      sx={{ color: 'rgba(255,255,255,0.8)', display: 'block', mb: 2 }}
+                    />
+
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                      <Button
+                        variant="contained"
+                        onClick={handleSaveAdminNotifications}
+                        disabled={savingAdminSettings}
+                        sx={{
+                          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                          '&:hover': { background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)' },
+                        }}
+                      >
+                        {savingAdminSettings ? 'Saving...' : 'Save Notification Settings'}
+                      </Button>
+                    </Box>
+                  </>
                 )}
               </Card>
             )}
