@@ -61,6 +61,7 @@ import {
   AttachMoney as ReferralIcon,
   ContentCopy as CopyIcon,
   OpenInNew as OpenIcon,
+  CameraAlt as CameraIcon,
 } from '@mui/icons-material';
 import keycloak from './keycloak';
 import { getAppsForRoles } from './appsConfig';
@@ -213,6 +214,10 @@ function App() {
   const [loadingAdminSettings, setLoadingAdminSettings] = useState(false);
   const [savingAdminSettings, setSavingAdminSettings] = useState(false);
 
+  // Profile photo state
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
   // Initialize Keycloak
   useEffect(() => {
     keycloak
@@ -362,6 +367,79 @@ function App() {
       setSnackbar({ open: true, message: 'Failed to save settings', severity: 'error' });
     } finally {
       setSavingAdminSettings(false);
+    }
+  };
+
+  // Fetch profile photo on authentication
+  useEffect(() => {
+    const fetchProfilePhoto = async () => {
+      if (!authenticated || !keycloak.tokenParsed?.sub) return;
+
+      try {
+        const userId = keycloak.tokenParsed.sub;
+        const response = await fetch(
+          `https://upload.candidstudios.net/api/profile-photo?userId=${userId}`
+        );
+        const data = await response.json();
+        if (data.exists && data.url) {
+          setProfilePhotoUrl(data.url);
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile photo:', error);
+      }
+    };
+
+    fetchProfilePhoto();
+  }, [authenticated]);
+
+  // Handle profile photo upload
+  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !keycloak.token) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      setSnackbar({ open: true, message: 'Please upload a JPEG, PNG, WebP, or GIF image', severity: 'error' });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setSnackbar({ open: true, message: 'Image must be less than 5MB', severity: 'error' });
+      return;
+    }
+
+    setUploadingPhoto(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+
+      const response = await fetch('https://upload.candidstudios.net/api/profile-photo', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${keycloak.token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Add cache buster to force reload
+        setProfilePhotoUrl(`${data.url}?t=${Date.now()}`);
+        setSnackbar({ open: true, message: 'Profile photo updated!', severity: 'success' });
+      } else {
+        setSnackbar({ open: true, message: data.error || 'Failed to upload photo', severity: 'error' });
+      }
+    } catch (error) {
+      console.error('Photo upload error:', error);
+      setSnackbar({ open: true, message: 'Failed to upload photo', severity: 'error' });
+    } finally {
+      setUploadingPhoto(false);
+      // Reset input
+      event.target.value = '';
     }
   };
 
@@ -673,23 +751,71 @@ function App() {
             {/* Profile Card */}
             <Card sx={{ mb: 4, p: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <Avatar
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    mr: 3,
-                    bgcolor: '#4a90e2',
-                    fontSize: '2rem',
-                  }}
-                >
-                  {profileData.firstName?.[0] || userName?.[0] || 'U'}
-                </Avatar>
+                {/* Profile Photo with Upload */}
+                <Box sx={{ position: 'relative', mr: 3 }}>
+                  <input
+                    type="file"
+                    id="profile-photo-input"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    style={{ display: 'none' }}
+                    onChange={handlePhotoUpload}
+                  />
+                  <label htmlFor="profile-photo-input" style={{ cursor: 'pointer' }}>
+                    <Avatar
+                      src={profilePhotoUrl || undefined}
+                      sx={{
+                        width: 80,
+                        height: 80,
+                        bgcolor: '#4a90e2',
+                        fontSize: '2rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          filter: 'brightness(0.8)',
+                        },
+                      }}
+                    >
+                      {!profilePhotoUrl && (profileData.firstName?.[0] || userName?.[0] || 'U')}
+                    </Avatar>
+                    {/* Camera overlay */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        bottom: 0,
+                        right: 0,
+                        width: 28,
+                        height: 28,
+                        borderRadius: '50%',
+                        bgcolor: '#4a90e2',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '2px solid rgba(255,255,255,0.9)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          bgcolor: '#357abd',
+                          transform: 'scale(1.1)',
+                        },
+                      }}
+                    >
+                      {uploadingPhoto ? (
+                        <ShutterLoader size={16} />
+                      ) : (
+                        <CameraIcon sx={{ fontSize: 16, color: 'white' }} />
+                      )}
+                    </Box>
+                  </label>
+                </Box>
                 <Box>
                   <Typography variant="h6" sx={{ color: '#fff' }}>
                     {profileData.firstName} {profileData.lastName}
                   </Typography>
                   <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)' }}>
                     {profileData.email}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', display: 'block', mt: 0.5 }}>
+                    Click photo to change
                   </Typography>
                   <Chip
                     label={userRoles.find(r => !['uma_authorization', 'offline_access', 'default-roles-candidstudios'].includes(r)) || 'User'}
