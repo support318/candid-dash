@@ -10,6 +10,7 @@ import {
   CloudUpload as UploadIcon,
   MenuBook as KnowledgeBaseIcon,
   AdminPanelSettings as AdminPanelIcon,
+  Task as ProjectManagementIcon,
 } from '@mui/icons-material';
 import React from 'react';
 
@@ -111,6 +112,14 @@ export const appsConfig: AppConfig[] = [
     url: 'https://admin.candidstudios.net/admin',
     description: 'Manage users, authentication settings, roles, and SSO configuration.',
     color: 'linear-gradient(135deg, rgba(100, 116, 139, 0.6) 0%, rgba(71, 85, 105, 0.4) 100%)',
+    roles: ['admin'],
+  },
+  {
+    name: 'Project Management',
+    icon: React.createElement(ProjectManagementIcon),
+    url: 'https://huly.candidstudios.net',
+    description: 'Task tracking, project planning, team collaboration, and sprint management.',
+    color: 'linear-gradient(135deg, rgba(59, 130, 246, 0.6) 0%, rgba(37, 99, 235, 0.4) 100%)',
     roles: ['admin'],
   },
 ];
