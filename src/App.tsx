@@ -66,6 +66,7 @@ import {
 import keycloak from './keycloak';
 import { getAppsForRoles } from './appsConfig';
 import type { AppConfig } from './appsConfig';
+import { UnifiedSearch } from './components/search';
 
 // Theme matching Keycloak login style - #4a90e2 blue with glassmorphism
 const theme = createTheme({
@@ -635,6 +636,13 @@ function App() {
       case 'dashboard':
         return (
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+            {/* Unified Search Bar */}
+            <UnifiedSearch
+              userRoles={userRoles}
+              userId={keycloak.tokenParsed?.sub}
+              token={keycloak.token}
+            />
+
             <Box sx={{ mb: 4 }}>
               <Typography variant="h5" gutterBottom sx={{ color: '#fff' }}>
                 Welcome back {profileData.firstName || userName.split(' ')[0] || 'there'} 👋
