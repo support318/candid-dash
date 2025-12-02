@@ -1261,7 +1261,7 @@ function App() {
                   <CardContent>
                     <Typography variant="h6">New Feature Release!</Typography>
                     <Typography variant="body2" paragraph>
-                      We've added new features to the Media Archive. Check it out!
+                      We've added new features to Cloud Storage. Check it out!
                     </Typography>
                     <Typography variant="body2">
                       - Product Team

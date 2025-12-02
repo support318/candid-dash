@@ -1,7 +1,6 @@
 import {
   Analytics as AnalyticsIcon,
   CloudQueue as CloudStorageIcon,
-  PhotoLibrary as MediaArchiveIcon,
   EventNote as BookingIcon,
   Language as WebsiteIcon,
   AttachMoney as ReferralIcon,
@@ -11,6 +10,10 @@ import {
   MenuBook as KnowledgeBaseIcon,
   AdminPanelSettings as AdminPanelIcon,
   Task as ProjectManagementIcon,
+  Chat as ChatIcon,
+  Notifications as NotificationsIcon,
+  Map as RoadmapIcon,
+  Videocam as VideoReviewIcon,
 } from '@mui/icons-material';
 import React from 'react';
 
@@ -37,18 +40,10 @@ export const appsConfig: AppConfig[] = [
   {
     name: 'Cloud Storage',
     icon: React.createElement(CloudStorageIcon),
-    url: 'https://vidiblast.net',
+    url: 'https://cloud.candidstudios.net',
     description: 'File sharing, collaboration, calendar and contacts sync, and office document editing.',
     color: 'linear-gradient(135deg, rgba(245, 158, 11, 0.6) 0%, rgba(217, 119, 6, 0.4) 100%)',
     roles: ['admin', 'photographer', 'photographer-videographer', 'photo-editor', 'video-editor', 'photo-video-editor', 'project-manager', 'client'],
-  },
-  {
-    name: 'Media Archive',
-    icon: React.createElement(MediaArchiveIcon),
-    url: 'https://media.candidstudios.net',
-    description: 'Browse and manage media files with secure authentication.',
-    color: 'linear-gradient(135deg, rgba(139, 92, 246, 0.6) 0%, rgba(124, 58, 237, 0.4) 100%)',
-    roles: ['admin', 'photographer', 'photographer-videographer', 'photo-editor', 'video-editor', 'photo-video-editor', 'project-manager'],
   },
   {
     name: 'Booking System',
@@ -85,7 +80,7 @@ export const appsConfig: AppConfig[] = [
   {
     name: 'Client Portal',
     icon: React.createElement(ClientPortalIcon),
-    url: '', // Phase 3 - to be configured
+    url: 'https://portal.candidstudios.net',
     description: 'Self-service portal for clients to view galleries, download photos, and manage bookings.',
     color: 'linear-gradient(135deg, rgba(6, 182, 212, 0.6) 0%, rgba(8, 145, 178, 0.4) 100%)',
     roles: ['admin', 'client'],
@@ -121,6 +116,38 @@ export const appsConfig: AppConfig[] = [
     description: 'Task tracking, project planning, team collaboration, and sprint management.',
     color: 'linear-gradient(135deg, rgba(59, 130, 246, 0.6) 0%, rgba(37, 99, 235, 0.4) 100%)',
     roles: ['admin'],
+  },
+  {
+    name: 'Candid Connect',
+    icon: React.createElement(ChatIcon),
+    url: 'https://connect.candidstudios.net',
+    description: 'Team messaging, channels, direct messages, and real-time collaboration.',
+    color: 'linear-gradient(135deg, rgba(239, 68, 68, 0.6) 0%, rgba(185, 28, 28, 0.4) 100%)',
+    roles: ['admin', 'photographer', 'photographer-videographer', 'photo-editor', 'video-editor', 'photo-video-editor', 'project-manager'],
+  },
+  {
+    name: 'Notifications',
+    icon: React.createElement(NotificationsIcon),
+    url: 'https://notifications.candidstudios.net',
+    description: 'Notification infrastructure for email, SMS, push, and in-app messaging.',
+    color: 'linear-gradient(135deg, rgba(34, 197, 94, 0.6) 0%, rgba(21, 128, 61, 0.4) 100%)',
+    roles: ['admin'],
+  },
+  {
+    name: 'Roadmap',
+    icon: React.createElement(RoadmapIcon),
+    url: 'https://roadmap.candidstudios.net',
+    description: 'Product roadmap, feature requests, feedback collection, and changelog.',
+    color: 'linear-gradient(135deg, rgba(168, 85, 247, 0.6) 0%, rgba(126, 34, 206, 0.4) 100%)',
+    roles: ['admin', 'client', 'photographer', 'photographer-videographer', 'photo-editor', 'video-editor', 'photo-video-editor', 'project-manager'],
+  },
+  {
+    name: 'Video Review',
+    icon: React.createElement(VideoReviewIcon),
+    url: 'https://review.candidstudios.net',
+    description: 'Frame-by-frame video review with timeline comments, drawing annotations, and collaborative feedback.',
+    color: 'linear-gradient(135deg, rgba(244, 63, 94, 0.6) 0%, rgba(190, 18, 60, 0.4) 100%)',
+    roles: ['admin', 'client', 'photographer', 'photographer-videographer', 'photo-editor', 'video-editor', 'photo-video-editor', 'project-manager'],
   },
 ];
 
